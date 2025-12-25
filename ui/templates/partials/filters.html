@@ -1,0 +1,79 @@
+<form class="card shadow-sm mb-3" method="get">
+  <div class="card-body">
+    <div class="row g-2 align-items-end">
+      <div class="col-12 col-md-2">
+        <label class="form-label small">آخر (بالساعات)</label>
+        <input class="form-control" type="number" name="since_hours" min="1" value="{{ filters.since_hours }}">
+      </div>
+
+      <div class="col-12 col-md-2">
+        <label class="form-label small">من تاريخ</label>
+        <input class="form-control" type="date" name="date_from" value="{{ filters.date_from or '' }}">
+      </div>
+
+      <div class="col-12 col-md-2">
+        <label class="form-label small">إلى تاريخ</label>
+        <input class="form-control" type="date" name="date_to" value="{{ filters.date_to or '' }}">
+      </div>
+      <div class="col-12 col-md-2">
+        <label class="form-label small">City</label>
+        <div class="dropdown js-filter" data-filter="city">
+          <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start js-filter-label" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+            City: All
+          </button>
+          <div class="dropdown-menu p-2 w-100">
+            <div class="form-check">
+              <input class="form-check-input js-filter-all" type="checkbox" id="cityAllFilter">
+              <label class="form-check-label" for="cityAllFilter">All</label>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="js-filter-options"></div>
+            <div class="dropdown-divider"></div>
+            <button type="button" class="btn btn-sm btn-link js-filter-clear">Clear</button>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-2">
+        <label class="form-label small">Status</label>
+        <div class="dropdown js-filter" data-filter="status">
+          <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start js-filter-label" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+            Status: All
+          </button>
+          <div class="dropdown-menu p-2 w-100">
+            <div class="form-check">
+              <input class="form-check-input js-filter-all" type="checkbox" id="statusAllFilter">
+              <label class="form-check-label" for="statusAllFilter">All</label>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="js-filter-options"></div>
+            <div class="dropdown-divider"></div>
+            <button type="button" class="btn btn-sm btn-link js-filter-clear">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-2">
+        <label class="form-label small">بحث (Username/IP)</label>
+        <input class="form-control" type="text" name="q" placeholder="ابحث..." value="{{ filters.q or '' }}">
+      </div>
+
+      <div class="col-12 col-md-2">
+        <label class="form-label small">Page Size</label>
+        <select class="form-select" name="page_size">
+          {% for s in page_size_options %}
+            <option value="{{ s }}" {% if filters.page_size == s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12 col-md-10 d-flex gap-2 justify-content-end">
+        <button class="btn btn-primary" type="submit">
+          <i class="bi bi-funnel me-1"></i>Apply
+        </button>
+        <a class="btn btn-outline-secondary" href="{{ reset_url if reset_url else '?' }}">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+        </a>
+      </div>
+    </div>
+  </div>
+</form>

@@ -1,0 +1,27 @@
+{% if pager %}
+{% set total_pages = pager.total_pages if pager.total_pages is defined else pager.pages %}
+{% set total_rows = pager.total_rows if pager.total_rows is defined else pager.total %}
+{% set prev_page = prev_page if prev_page is defined else (pager.prev_page if pager.prev_page is defined else (pager.page - 1 if pager.page and pager.page > 1 else 1)) %}
+{% set next_page = next_page if next_page is defined else (pager.next_page if pager.next_page is defined else (pager.page + 1 if pager.page else 2)) %}
+{% if total_pages and total_pages > 1 %}
+<nav class="d-flex justify-content-between align-items-center mt-3">
+  <div class="small text-muted">
+    Rows: {{ total_rows }} | Page {{ pager.page }} / {{ total_pages }}
+  </div>
+
+  <ul class="pagination mb-0">
+    <li class="page-item {% if not pager.has_prev %}disabled{% endif %}">
+      <a class="page-link" href="{{ qs_builder(prev_page) if pager.has_prev else '#' }}">
+        Prev
+      </a>
+    </li>
+
+    <li class="page-item {% if not pager.has_next %}disabled{% endif %}">
+      <a class="page-link" href="{{ qs_builder(next_page) if pager.has_next else '#' }}">
+        Next
+      </a>
+    </li>
+  </ul>
+</nav>
+{% endif %}
+{% endif %}

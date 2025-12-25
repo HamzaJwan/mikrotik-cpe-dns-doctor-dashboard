@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h4 class="m-0">Inventory</h4>
+</div>
+
+{% include "partials/filters.html" %}
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Username</th>
+          <th>Last IP</th>
+          <th>City</th>
+          <th>Status</th>
+          <th>Login</th>
+          <th>Fix</th>
+          <th>Seen</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if rows|length == 0 %}
+          <tr><td colspan="8" class="text-center text-muted py-4">No data (Stage 1 placeholder)</td></tr>
+        {% else %}
+          {% for r in rows %}
+            <tr>
+              <td>{{ r.canonical_username or r.pppoe_username or '-' }}</td>
+              <td>{{ r.last_ip }}</td>
+              <td>{{ r.last_city }}</td>
+              <td>{{ r.last_status }}</td>
+              <td>{{ r.last_login_success }}</td>
+              <td>{{ r.last_fix_applied }}</td>
+              <td>{{ r.last_seen_at }}</td>
+              <td><a class="btn btn-sm btn-outline-primary" href="/inventory/{{ r.canonical_username or r.pppoe_username }}">History</a></td>
+            </tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

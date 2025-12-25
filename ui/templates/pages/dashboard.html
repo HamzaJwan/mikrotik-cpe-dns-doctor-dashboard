@@ -1,0 +1,190 @@
+{# ui/templates/pages/dashboard.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h3 class="mb-0">Dashboard</h3>
+      <div class="text-muted small">
+        {% if filters and filters.since_hours %}
+          آخر مدة تشغيل مُحددة: {{ filters.since_hours }} ساعة
+        {% else %}
+          آخر مدة تشغيل مُحددة: 24 ساعة
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary btn-sm" href="/" title="Refresh">
+        <i class="bi bi-arrow-repeat"></i> Refresh
+      </a>
+    </div>
+  </div>
+
+  {# Filters #}
+  {% include "partials/filters.html" %}
+
+  {# KPIs #}
+  <div class="row g-3 mt-1">
+    <div class="col-12 col-md-2">
+      <div class="card kpi-card">
+        <div class="card-body text-center">
+          <div class="small text-muted mb-1">Rebooted</div>
+          <div class="kpi-value">{{ (kpis.rebooted if kpis is defined and kpis else 0) }}</div>
+          <div class="kpi-icon text-muted"><i class="bi bi-arrow-clockwise"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-2">
+      <div class="card kpi-card">
+        <div class="card-body text-center">
+          <div class="small text-muted mb-1">Fix Applied</div>
+          <div class="kpi-value">{{ (kpis.fix_applied if kpis is defined and kpis else 0) }}</div>
+          <div class="kpi-icon text-muted"><i class="bi bi-wrench-adjustable"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-2">
+      <div class="card kpi-card">
+        <div class="card-body text-center">
+          <div class="small text-muted mb-1">Login Failed</div>
+          <div class="kpi-value">{{ (kpis.login_failed if kpis is defined and kpis else 0) }}</div>
+          <div class="kpi-icon text-muted"><i class="bi bi-shield-lock"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-2">
+      <div class="card kpi-card">
+        <div class="card-body text-center">
+          <div class="small text-muted mb-1">Failed</div>
+          <div class="kpi-value">{{ (kpis.failed if kpis is defined and kpis else 0) }}</div>
+          <div class="kpi-icon text-muted"><i class="bi bi-x-circle"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-2">
+      <div class="card kpi-card">
+        <div class="card-body text-center">
+          <div class="small text-muted mb-1">OK</div>
+          <div class="kpi-value">{{ (kpis.ok if kpis is defined and kpis else 0) }}</div>
+          <div class="kpi-icon text-muted"><i class="bi bi-check-circle"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-2">
+      <div class="card kpi-card">
+        <div class="card-body text-center">
+          <div class="small text-muted mb-1">Total Targets</div>
+          <div class="kpi-value">{{ (kpis.total_targets if kpis is defined and kpis else 0) }}</div>
+          <div class="small text-muted mt-1">
+            {% if filters and filters.since_hours %}
+              آخر {{ filters.since_hours }} ساعة
+            {% else %}
+              آخر 24 ساعة
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Latest Sessions #}
+  <div class="card mt-3">
+    <div class="card-body">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <div class="d-flex gap-2">
+          <a class="btn btn-outline-secondary btn-sm" href="/sessions">
+            <i class="bi bi-box-arrow-up-right"></i> Open Sessions
+          </a>
+        </div>
+        <div class="text-muted small">
+          <i class="bi bi-clock"></i> Latest Sessions
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-sm align-middle">
+          <thead>
+            <tr>
+              <th style="width:90px;"></th>
+              <th class="text-center">Status</th>
+              <th class="text-center">Mode</th>
+              <th class="text-center">City</th>
+              <th class="text-center">Total CPEs</th>
+              <th class="text-center">Started</th>
+              <th class="text-center">Finished</th>
+              <th class="text-end">ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if latest_sessions is defined and latest_sessions and (latest_sessions|length > 0) %}
+              {% for s in latest_sessions %}
+                <tr>
+                  <td>
+                    <a class="btn btn-primary btn-sm" href="/sessions/{{ s.id }}">View</a>
+                  </td>
+
+                  <td class="text-center">
+                    {% if s.status == 'completed' %}
+                      <span class="badge text-bg-success">completed</span>
+                    {% elif s.status == 'canceled' %}
+                      <span class="badge text-bg-secondary">canceled</span>
+                    {% elif s.status == 'failed' %}
+                      <span class="badge text-bg-danger">failed</span>
+                    {% else %}
+                      <span class="badge text-bg-light">{{ s.status }}</span>
+                    {% endif %}
+                  </td>
+
+                  <td class="text-center">
+                    {% if s.mode %}
+                      <span class="badge text-bg-dark">{{ s.mode }}</span>
+                    {% else %}
+                      <span class="text-muted">-</span>
+                    {% endif %}
+                  </td>
+
+                  <td class="text-center">
+                    {% if s.city %}
+                      {{ s.city }}
+                    {% else %}
+                      <span class="text-muted">-</span>
+                    {% endif %}
+                  </td>
+
+                  <td class="text-center">{{ s.total_cpes if s.total_cpes is not none else '-' }}</td>
+
+                  <td class="text-center">
+                    {{ s.started_at if s.started_at is not none else '-' }}
+                  </td>
+
+                  <td class="text-center">
+                    {{ s.finished_at if s.finished_at is not none else '-' }}
+                  </td>
+
+                  <td class="text-end">#{{ s.id }}</td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="8" class="text-center text-muted py-4">
+                  لا توجد Sessions حالياً.
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

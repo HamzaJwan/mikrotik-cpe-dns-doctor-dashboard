@@ -1,0 +1,28 @@
+﻿# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtualenvs (DO NOT COMMIT)
+venv/
+.venv/
+venv312/
+
+# Runtime outputs
+out/
+logs/
+*.log
+
+# Secrets
+.env
+config/passwords.txt
+
+# OS/IDE
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Archives
+*.zip

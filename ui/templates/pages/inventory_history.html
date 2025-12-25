@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h4 class="m-0">History</h4>
+    {% if username %}
+      <div class="small text-muted">{{ username }}</div>
+    {% endif %}
+  </div>
+  <a class="btn btn-outline-secondary" href="/inventory">Back</a>
+</div>
+
+{% include "partials/filters.html" %}
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Time</th>
+            <th>Username</th>
+            <th>IP</th>
+            <th>City</th>
+            <th>Status</th>
+            <th>Warnings</th>
+            <th>Login</th>
+            <th>Fix</th>
+            <th>Session</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if rows and rows|length > 0 %}
+            {% for r in rows %}
+              <tr>
+                <td>{{ r.created_at }}</td>
+                <td>{{ r.canonical_username or r.pppoe_username or '-' }}</td>
+                <td>{{ r.ip }}</td>
+                <td>{{ r.city or '-' }}</td>
+                <td>{{ r.status }}</td>
+                <td>{{ r.warning_count or 0 }}</td>
+                <td>{{ r.login_success }}</td>
+                <td>{{ r.fix_applied }}</td>
+                <td>{{ r.session_id }}</td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="9" class="text-center text-muted py-4">No history rows.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+    <div class="px-3 pb-3">
+      {% include "partials/pagination.html" %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

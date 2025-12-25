@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+{% block content %}
+
+{# ---------------------------
+  Pagination helpers (local)
+  - pagination.html expects:
+    qs_builder(page), prev_page, next_page
+---------------------------- #}
+{% set prev_page = (pager.page - 1) if pager and pager.page and pager.page > 1 else 1 %}
+{% set next_page = (pager.page + 1) if pager and pager.page else 2 %}
+
+{% macro qs_builder(page) -%}
+  {%- set qp = request.query_params -%}
+  {%- set q = qp.get('q', qp.get('search','')) -%}
+  {%- set statuses = qp.getlist('status') -%}
+  {%- set page_size = qp.get('page_size','') -%}
+  {%- set cities = qp.getlist('city') -%}
+  {%- set action = qp.get('action','') -%}
+  {%- set return_to = qp.get('return_to','') -%}
+
+  {{ request.url.path }}?page={{ page }}
+  {%- if page_size %}&page_size={{ page_size }}{% endif -%}
+  {%- if q %}&q={{ q }}{% endif -%}
+  {%- for st in statuses %}&status={{ st }}{% endfor -%}
+  {%- for c in cities %}&city={{ c }}{% endfor -%}
+  {%- if action %}&action={{ action }}{% endif -%}
+  {%- if return_to %}&return_to={{ return_to }}{% endif -%}
+{%- endmacro %}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h4 class="m-0">Session #{{ session_id }}</h4>
+    {% if not_found %}
+      <div class="small text-danger">Session غير موجودة</div>
+    {% else %}
+      <div class="small text-muted">
+        {% if session %}
+          <span class="me-2"><strong>Status:</strong> <span id="jsSessionStatus">{{ session.status }}</span></span>
+          <span class="me-2"><strong>Mode:</strong> {{ session.mode }}</span>
+          <span class="me-2"><strong>City:</strong> {{ session.city or '-' }}</span>
+          <span class="me-2"><strong>Total CPEs:</strong> {{ session.total_cpes or 0 }}</span>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <a class="btn btn-outline-secondary" href="{{ return_to }}">
+    <i class="bi bi-arrow-right me-1"></i>Back
+  </a>
+</div>
+
+{% if not not_found %}
+
+
+  <div class="card shadow-sm mb-3 js-session-progress" data-session-id="{{ session.id }}">
+    <div class="card-body">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+        <div class="fw-semibold">
+          <i class="bi bi-activity me-1"></i>Progress
+          <span class="text-muted small ms-2">Session #{{ session.id }}</span>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+          <form method="post" action="/sessions/{{ session.id }}/pause" class="d-inline">
+            <button class="btn btn-outline-warning btn-sm" type="submit">
+              <i class="bi bi-pause-fill"></i> Pause
+            </button>
+          </form>
+          <form method="post" action="/sessions/{{ session.id }}/resume" class="d-inline">
+            <button class="btn btn-outline-success btn-sm" type="submit">
+              <i class="bi bi-play-fill"></i> Resume
+            </button>
+          </form>
+          <form method="post" action="/sessions/{{ session.id }}/stop" class="d-inline">
+            <button class="btn btn-outline-danger btn-sm" type="submit" onclick="return confirm('Stop this session?');">
+              <i class="bi bi-stop-fill"></i> Stop
+            </button>
+          </form>
+          <form method="post" action="/sessions/{{ session.id }}/kill" class="d-inline">
+            <button class="btn btn-danger btn-sm" type="submit" onclick="return confirm('Force Kill? Use only if needed.');">
+              <i class="bi bi-exclamation-octagon"></i> Force Kill
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="progress" style="height: 12px;">
+        <div class="progress-bar" role="progressbar" style="width:0%" id="jsProgressBar"></div>
+      </div>
+      <div class="small text-muted mt-2" id="jsProgressText">Loading…</div>
+    </div>
+  </div>
+
+
+  {# KPIs #}
+  <div class="row g-3">
+    <div class="col-6 col-lg-2">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Total</div>
+          <div class="fs-4 fw-bold" id="jsKpiTotal">{{ (kpis.total or 0) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-2">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">OK</div>
+          <div class="fs-4 fw-bold text-success" id="jsKpiOk">{{ (kpis.ok_count or 0) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-2">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Failed</div>
+          <div class="fs-4 fw-bold text-danger" id="jsKpiFailed">{{ (kpis.failed_count or 0) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-2">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Login Failed</div>
+          <div class="fs-4 fw-bold text-warning" id="jsKpiLoginFailed">{{ (kpis.login_failed_count or 0) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-2">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Fixed</div>
+          <div class="fs-4 fw-bold" id="jsKpiFixed">{{ (kpis.fixed_count or 0) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-lg-2">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Rebooted</div>
+          <div class="fs-4 fw-bold" id="jsKpiRebooted">{{ (kpis.rebooted_count or 0) }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Filters (simple) #}
+  <div class="card shadow-sm mt-3">
+    <div class="card-body">
+      <form method="get" class="row g-2 align-items-end">
+        <input type="hidden" name="return_to" value="{{ request.query_params.get('return_to','') }}"/>
+
+        <div class="col-12 col-md-5">
+          <label class="form-label small text-muted">بحث (Username/IP)</label>
+          <input type="text" name="q" value="{{ request.query_params.get('q', request.query_params.get('search','')) }}" class="form-control" placeholder="ابحث...">
+        </div>
+        <div class="col-6 col-md-3">
+          <label class="form-label small text-muted">Status</label>
+          <div class="dropdown js-filter" data-filter="status">
+            <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start js-filter-label" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+              Status: All
+            </button>
+            <div class="dropdown-menu p-2 w-100">
+              <div class="form-check">
+                <input class="form-check-input js-filter-all" type="checkbox" id="statusAllSession">
+                <label class="form-check-label" for="statusAllSession">All</label>
+              </div>
+              <div class="dropdown-divider"></div>
+              <div class="js-filter-options"></div>
+              <div class="dropdown-divider"></div>
+              <button type="button" class="btn btn-sm btn-link js-filter-clear">Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-2">
+          <label class="form-label small text-muted">Page Size</label>
+          <select name="page_size" class="form-select">
+            {% set ps = request.query_params.get('page_size','25') %}
+            <option value="10" {% if ps=='10' %}selected{% endif %}>10</option>
+            <option value="25" {% if ps=='25' %}selected{% endif %}>25</option>
+            <option value="50" {% if ps=='50' %}selected{% endif %}>50</option>
+            <option value="100" {% if ps=='100' %}selected{% endif %}>100</option>
+          </select>
+        </div>
+
+        <div class="col-12 col-md-2 d-flex gap-2">
+          <button class="btn btn-primary w-100" type="submit">Apply</button>
+          <a class="btn btn-outline-secondary w-100" href="{{ request.url.path }}?return_to={{ request.query_params.get('return_to','') }}">Reset</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {# Outcomes Table #}
+  <div class="card shadow-sm mt-3">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 180px;">Time</th>
+              <th style="width: 140px;">IP</th>
+              <th style="width: 220px;">PPPoE User</th>
+              <th style="width: 140px;">City</th>
+              <th style="width: 140px;">Action</th>
+              <th style="width: 140px;">Status</th>
+              <th style="width: 140px;">Login</th>
+              <th style="width: 120px;">Warn</th>
+              <th style="width: 120px;">Fixed</th>
+            </tr>
+          </thead>
+
+          <tbody id="jsOutcomesBody">
+            {% if not outcomes or outcomes|length == 0 %}
+              <tr>
+                <td colspan="9" class="text-center text-muted py-4">لا توجد Outcomes ضمن هذه Session حسب الفلاتر الحالية</td>
+              </tr>
+            {% else %}
+              {% for r in outcomes %}
+                <tr>
+                  <td>{{ r.created_at or '-' }}</td>
+                  <td class="fw-semibold">{{ r.ip }}</td>
+                  <td>{{ r.pppoe_username or '-' }}</td>
+                  <td>{{ r.city or '-' }}</td>
+
+                  <td>
+                    <span class="badge rounded-pill text-bg-dark">{{ r.action or '-' }}</span>
+                  </td>
+
+                  <td>
+                    {% set st = (r.status or '').lower() %}
+                    {% if st == 'ok' %}
+                      <span class="badge rounded-pill text-bg-success">ok</span>
+                    {% elif st in ['reserved'] %}
+                      <span class="badge rounded-pill text-bg-secondary">reserved</span>
+                    {% else %}
+                      <span class="badge rounded-pill text-bg-danger">{{ r.status }}</span>
+                    {% endif %}
+                  </td>
+
+                  <td>
+                    {% if r.login_success is not none %}
+                      {% if r.login_success == 1 %}
+                        <span class="badge rounded-pill text-bg-success">true</span>
+                      {% else %}
+                        <span class="badge rounded-pill text-bg-danger">false</span>
+                      {% endif %}
+                    {% else %}
+                      <span class="text-muted">-</span>
+                    {% endif %}
+                  </td>
+
+                  <td>{{ r.warning_count or 0 }}</td>
+
+                  <td>
+                    {% if r.fix_applied is not none %}
+                      {% if r.fix_applied == 1 %}
+                        <span class="badge rounded-pill text-bg-success">yes</span>
+                      {% else %}
+                        <span class="badge rounded-pill text-bg-secondary">no</span>
+                      {% endif %}
+                    {% else %}
+                      <span class="text-muted">-</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="px-3 pb-3 pt-2">
+        {% include "partials/pagination.html" %}
+        <div class="small text-muted mt-1">Rows: {{ total or 0 }} | Page {{ pager.page }} / {{ pager.pages }}</div>
+      </div>
+    </div>
+  </div>
+
+{% endif %}
+
+{% endblock %}

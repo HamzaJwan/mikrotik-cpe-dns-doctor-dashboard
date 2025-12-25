@@ -1,0 +1,20 @@
+{# Flash messages (session-based) + direct message fallback #}
+{% set msgs = flashes or [] %}
+
+{% if message %}
+  <div class="alert alert-{{ level or 'danger' }} mb-3" role="alert">
+    {{ message }}
+  </div>
+{% endif %}
+
+{% for m in msgs %}
+  {% set lvl = (m.level or 'info') %}
+  {% if lvl == 'error' %}
+    {% set cls = 'danger' %}
+  {% else %}
+    {% set cls = lvl %}
+  {% endif %}
+  <div class="alert alert-{{ cls }} mb-2" role="alert" data-autohide="true">
+    {{ m.message }}
+  </div>
+{% endfor %}

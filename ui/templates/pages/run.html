@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h3 class="mb-1">Run</h3>
+    <div class="text-muted small">تشغيل multi_cpe.py من الويب (Stage 3)</div>
+  </div>
+  <div class="text-end">
+    <a class="btn btn-outline-secondary btn-sm" href="/sessions">
+      <i class="bi bi-clock-history"></i> Sessions
+    </a>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-xl-8">
+
+    <div class="card shadow-sm">
+      <div class="card-header bg-body">
+        <div class="fw-semibold"><i class="bi bi-play-circle"></i> تشغيل جديد</div>
+      </div>
+
+      <div class="card-body">
+        <form method="post" action="/run/start" class="vstack gap-3">
+
+          <div class="row g-2">
+            <div class="col-12 col-md-4">
+              <label class="form-label">Mode</label>
+              <select name="mode" class="form-select">
+                <option value="audit">audit (فحص فقط)</option>
+                <option value="fix">fix (فحص + إصلاح)</option>
+                <option value="fix+reboot">fix+reboot (فحص + إصلاح + إعادة تشغيل)</option>
+              </select>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label class="form-label">Rules Source</label>
+              <select name="rules_source" class="form-select">
+                <option value="db" selected>db (Dynamic Rules)</option>
+                <option value="static">static (Built-in)</option>
+                <option value="mixed">mixed (db + static)</option>
+              </select>
+              <div class="form-text">عند اختيار <b>db</b> ستعمل صفحة <b>Rules</b> مباشرة.</div>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label class="form-label">Targets Source</label>
+              <select name="targets_source" class="form-select js-targets-source">
+                <option value="radius" selected>Radius Online Customers (--from-radius)</option>
+                <option value="custom">Custom CIDR / IP list (--input)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="border-top pt-3"></div>
+
+          <div class="js-radius-block">
+            <div class="row g-2 align-items-end">
+              <div class="col-12 col-md-6">
+                <label class="form-label">City</label>
+                <div class="dropdown js-run-city" data-filter="run-city">
+                  <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start js-filter-label" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                    City: All
+                  </button>
+                  <div class="dropdown-menu p-2 w-100">
+                    <div class="js-filter-options"></div>
+                    <div class="dropdown-divider"></div>
+                    <button type="button" class="btn btn-sm btn-link js-filter-clear">Clear</button>
+                  </div>
+                </div>
+                <div class="form-text">Select one or more cities, or use All Cities.</div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="form-check mt-4">
+                  <input class="form-check-input" type="checkbox" value="1" id="allCities" name="all_cities">
+                  <label class="form-check-label" for="allCities">All Cities (--all-cities)</label>
+                </div>
+                <div class="form-text">عند تفعيلها سيتم تجاهل City.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="js-custom-block d-none">
+            <label class="form-label">Custom Targets (CIDR/IPs)</label>
+            <textarea name="targets_text" class="form-control" rows="4" placeholder="مثال: 192.168.100.0/24 أو 10.0.0.1,10.0.0.2"></textarea>
+            <div class="form-text">يدعم CIDR أو قائمة IPs. حد التوسيع الافتراضي: 4096 عنوان.</div>
+          </div>
+
+          <div class="border-top pt-3"></div>
+
+          <div class="row g-2">
+            <div class="col-6 col-md-3">
+              <label class="form-label">Threads</label>
+              <input type="number" class="form-control" name="threads" value="30" min="1" max="200">
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label">Timeout (sec)</label>
+              <input type="number" class="form-control" name="timeout" value="10" min="3" max="120">
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label">Batch Size</label>
+              <input type="number" class="form-control" name="batch_size" value="300" min="10" max="5000">
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label">Limit</label>
+              <input type="number" class="form-control" name="limit" value="0" min="0" max="100000">
+              <div class="form-text">0 = بدون حد.</div>
+            </div>
+          </div>
+
+          <div class="row g-2">
+            <div class="col-6 col-md-3">
+              <label class="form-label">Progress Interval</label>
+              <input type="number" class="form-control" name="progress_interval" value="2" min="1" max="30">
+            </div>
+            <div class="col-12 col-md-9 d-flex align-items-end justify-content-end">
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-play-fill"></i> Start
+              </button>
+            </div>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="col-12 col-xl-4">
+    <div class="card shadow-sm">
+      <div class="card-header bg-body">
+        <div class="fw-semibold"><i class="bi bi-info-circle"></i> ملاحظات تشغيل</div>
+      </div>
+      <div class="card-body small text-muted">
+        <ul class="mb-0">
+          <li>الافتراضي: targets من Radius (الزبائن الأونلاين) + تخزين النتائج في DB + ملفات out/ كمرجع.</li>
+          <li>Stop/Pause/Resume يتم عبر <b>control file</b> داخل out/ (آمن على ويندوز).</li>
+          <li>Force Kill موجود كخيار احتياطي (taskkill) لكنه آخر حل.</li>
+          <li>لضبط اتصال Radius DB (DMA): استخدم متغيرات البيئة: <code>RADIUS_DB_HOST</code>… إلخ.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mt-3">
+      <div class="card-header bg-body">
+        <div class="fw-semibold"><i class="bi bi-sliders"></i> Stage 2</div>
+      </div>
+      <div class="card-body">
+        <a href="/rules" class="btn btn-outline-primary w-100">
+          <i class="bi bi-gear"></i> Manage Rules
+        </a>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mt-3">
+      <div class="card-header bg-body">
+        <div class="fw-semibold"><i class="bi bi-question-circle"></i> Help / Glossary</div>
+      </div>
+      <div class="card-body">
+        <button class="btn btn-outline-secondary w-100" type="button" data-bs-toggle="offcanvas" data-bs-target="#runGlossary">
+          <i class="bi bi-info-circle"></i> Definitions
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="runGlossary">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">Help / Glossary</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body small">
+    <div class="mb-2"><strong>Batch Size</strong> - How many CPEs are grouped per cycle before writing results.</div>
+    <div class="mb-2"><strong>Timeout (sec)</strong> - Max seconds to wait for a device response before moving on.</div>
+    <div class="mb-2"><strong>Threads</strong> - Parallel workers running checks at the same time.</div>
+    <div class="mb-2"><strong>Rules Source</strong> - Where DNS rules come from (db, static, or mixed).</div>
+    <div class="mb-2"><strong>Mode</strong> - audit = check only, fix = apply fixes, fix+reboot = fix then reboot.</div>
+    <div class="mb-2"><strong>Progress Interval</strong> - How often the worker writes progress updates.</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const sel = document.querySelector('.js-targets-source');
+  const radiusBlock = document.querySelector('.js-radius-block');
+  const customBlock = document.querySelector('.js-custom-block');
+  function sync(){
+    const v = sel.value;
+    if(v === 'custom'){
+      radiusBlock.classList.add('d-none');
+      customBlock.classList.remove('d-none');
+    } else {
+      radiusBlock.classList.remove('d-none');
+      customBlock.classList.add('d-none');
+    }
+  }
+  if(sel){ sel.addEventListener('change', sync); sync(); }
+})();
+</script>
+
+{% endblock %}

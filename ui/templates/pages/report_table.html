@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h4 class="m-0">Report: {{ report_key }}</h4>
+  </div>
+  <a class="btn btn-outline-secondary btn-sm" href="/reports">
+    <i class="bi bi-arrow-left"></i> Back
+  </a>
+</div>
+
+{% include "partials/filters.html" %}
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            {% for col in columns %}
+              {% set next_dir = 'asc' if sort_dir == 'desc' else 'desc' %}
+              <th>
+                <a class="text-decoration-none" href="?sort_key={{ col.key }}&sort_dir={{ next_dir }}">
+                  {{ col.label }}
+                </a>
+              </th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% if rows and rows|length > 0 %}
+            {% for r in rows %}
+              <tr>
+                {% for col in columns %}
+                  <td>{{ r[col.key] }}</td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="{{ columns|length }}" class="text-center text-muted py-4">No rows.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+    <div class="px-3 pb-3">
+      {% include "partials/pagination.html" %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

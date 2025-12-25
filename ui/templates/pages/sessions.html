@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-head d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h1 class="h3 mb-0">Sessions</h1>
+    <div class="text-muted small">{{ total }} : إجمالي النتائج</div>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary btn-sm" href="/sessions">
+      <i class="bi bi-arrow-clockwise"></i> Refresh
+    </a>
+  </div>
+</div>
+
+{% include "partials/filters.html" %}
+
+<div class="card card-surface mt-3">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 84px">ID</th>
+            <th style="width: 160px">Finished</th>
+            <th style="width: 160px">Started</th>
+            <th style="width: 120px">Total CPEs</th>
+            <th style="width: 140px">City</th>
+            <th style="width: 120px">Mode</th>
+            <th style="width: 120px">Status</th>
+            <th style="width: 90px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if rows and rows|length > 0 %}
+            {% for r in rows %}
+            <tr>
+              <td class="fw-semibold">#{{ r.id }}</td>
+
+              <td>
+                {% if r.finished_at %}
+                  {{ r.finished_at }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+
+              <td>
+                {% if r.started_at %}
+                  {{ r.started_at }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+
+              <td class="text-center">{{ r.total_cpes or 0 }}</td>
+
+              <td class="text-center">
+                {% if r.city %}
+                  {{ r.city }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+
+              <td class="text-center">
+                {% if r.mode %}
+                  <span class="badge text-bg-dark">{{ r.mode }}</span>
+                {% else %}
+                  <span class="badge text-bg-secondary">-</span>
+                {% endif %}
+              </td>
+
+              <td class="text-center">
+                {% if r.status == "completed" %}
+                  <span class="badge text-bg-success">completed</span>
+                {% elif r.status == "canceled" %}
+                  <span class="badge text-bg-secondary">canceled</span>
+                {% elif r.status == "running" %}
+                  <span class="badge text-bg-primary">running</span>
+                {% elif r.status == "failed" %}
+                  <span class="badge text-bg-danger">failed</span>
+                {% else %}
+                  <span class="badge text-bg-secondary">{{ r.status or "-" }}</span>
+                {% endif %}
+              </td>
+
+              <td class="text-end">
+                <a class="btn btn-primary btn-sm" href="/sessions/{{ r.id }}">View</a>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="8" class="text-center text-muted py-4">
+                لا توجد Sessions حاليًا
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="px-3 pb-3">
+      {% include "partials/pagination.html" %}
+    </div>
+  </div>
+</div>
+{% endblock %}
